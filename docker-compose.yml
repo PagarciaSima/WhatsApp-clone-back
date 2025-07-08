@@ -1,0 +1,45 @@
+### Comando 'docker compose up -d' para iniciar los contenedores
+
+services:
+  ### Contenedor postgres
+  postgres:
+    container_name: postgres-sql-wac
+    # img oficial dockerhub
+    image: postgres
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      PGDATA: /var/lib/postgresql/data
+      POSTGRES_DB: whatsapp_clone
+    volumes:
+      - postgres:/var/lib/postgresql/data  # Guardar el volumen en la ruta para persistir
+    ports:
+      # local / contenedor
+      - "5432:5432"
+    networks:
+      - whatsapp-clone
+    # Reinicio en caso de error
+    restart: unless-stopped
+  ### Contenedor keycloak
+  keykloak:
+    container_name: keycloak-wac
+    image: quay.io/keycloak/keycloak:26.0.0
+    ports:
+      - "9090:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    networks:
+      - whatsapp-clone
+    command:
+      # Comando para iniciar keycloak
+      - "start-dev"
+
+networks:
+  whatsapp-clone:
+    # Crea red virtual privada
+    driver: bridge
+
+volumes:
+  postgres:
+    driver: local
