@@ -12,6 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -25,6 +27,17 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "messages")
+
+@NamedQueries({
+    @NamedQuery(
+        name = MessageConstants.FIND_MESSAGES_BY_CHAT_ID,
+        query = "SELECT m FROM Message m WHERE m.chat.id = :chatId ORDER BY m.createdDate"
+    ),
+    @NamedQuery(
+        name = MessageConstants.SET_MESSAGES_TO_SEEN_BY_CHAT,
+        query = "UPDATE Message m SET m.state = :newState WHERE m.chat.id = :chatId"
+    )
+})
 public class Message extends BaseAuditingEntity{
 	
 	@Id
