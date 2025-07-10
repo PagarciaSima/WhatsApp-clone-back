@@ -1,5 +1,6 @@
 package com.pgs.whatsappclone.message;
 
+import com.pgs.whatsappclone.chat.Chat;
 import com.pgs.whatsappclone.common.BaseAuditingEntity;
 
 import jakarta.persistence.Column;
@@ -9,6 +10,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -37,6 +40,10 @@ public class Message extends BaseAuditingEntity{
 	
 	@Enumerated(EnumType.STRING)
 	private MessageType type;
+	
+	@ManyToOne
+	@JoinColumn(name = "chat_id")
+	private Chat chat;
 	
 	@Column(name = "sender_id", nullable = false)
 	private String senderId;
