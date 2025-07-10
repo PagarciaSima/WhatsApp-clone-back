@@ -46,7 +46,6 @@ import lombok.Setter;
         query = "SELECT DISTINCT c FROM Chat c WHERE (c.sender.id = :senderId AND c.recipient.id = :recipientId) OR (c.sender.id = :recipientId AND c.recipient.id = :senderId)"
     )
 })
-
 public class Chat extends BaseAuditingEntity{
 	
 	@Id
