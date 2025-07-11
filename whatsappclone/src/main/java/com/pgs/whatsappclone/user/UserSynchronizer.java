@@ -17,6 +17,18 @@ public class UserSynchronizer {
 	private final UserRepository userRepository;
 	private final UserMapper userMapper;
 	
+	/**
+	 * Synchronizes the user data with the identity provider (IDP) based on the given JWT token.
+	 * <p>
+	 * This method extracts the user's email from the token and attempts to find a matching
+	 * user in the database. If a user with the same email exists, it reuses the existing user's ID
+	 * to ensure the database entry is updated rather than creating a new one.
+	 * <br>
+	 * A new {@link User} entity is then built from the token attributes and saved to the repository.
+	 * </p>
+	 *
+	 * @param token the JWT token containing user identity claims from the IDP
+	 */
 	public void synchronizeWithIdp(Jwt token) {
 		log.info("Synchronizing user with idp");
 		this.getUserEmail(token).ifPresent(userEmail -> {
@@ -45,10 +57,16 @@ public class UserSynchronizer {
 	 */
 	private Optional<String> getUserEmail(Jwt token) {
 		Map<String, Object> attributes = token.getClaims();
-		if(attributes.containsKey("email")) {
-			return Optional.of(attributes.get("email").toString());
+		
+		if (attributes.containsKey("email")) {
+			String email = attributes.get("email").toString();
+			log.debug("Email found in token claims: {}", email);
+			return Optional.of(email);
 		}
+		
+		log.warn("Email not found in token claims");
 		return Optional.empty();
 	}
+
 
 }
