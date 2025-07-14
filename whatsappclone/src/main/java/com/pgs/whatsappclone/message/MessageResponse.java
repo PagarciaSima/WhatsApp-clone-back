@@ -21,5 +21,5 @@ public class MessageResponse {
 	private String senderId;
 	private String receiverId;
 	private LocalDateTime createdAt;
-	private byte [] nedia;
+	private byte [] media;
 }

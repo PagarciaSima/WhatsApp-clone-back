@@ -2,6 +2,8 @@ package com.pgs.whatsappclone.message;
 
 import org.springframework.stereotype.Service;
 
+import com.pgs.whatsappclone.file.FileUtils;
+
 @Service
 public class MessageMapper {
 	
@@ -14,7 +16,7 @@ public class MessageMapper {
 				.type(message.getType())
 				.state(message.getState())
 				.createdAt(message.getCreatedDate())
-				// TODO read the media file
+				.media(FileUtils.readFileFromLocation(message.getMediaFilePath()))
 				.build();
 	}
 }
