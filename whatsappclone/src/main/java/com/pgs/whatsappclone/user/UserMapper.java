@@ -55,4 +55,20 @@ public class UserMapper {
 		return user;
 	}
 
+	/**
+	 * Converts a {@link User} entity into a {@link UserResponse} DTO.
+	 *
+	 * @param user the {@link User} entity to convert
+	 * @return a {@link UserResponse} object populated with data from the given {@link User}
+	 */
+	public UserResponse toUserResponse(User user) {
+		return UserResponse.builder()
+				.id(user.getId())
+				.firstName(user.getFirstName())
+				.lastName(user.getLastName())
+				.email(user.getEmail())
+				.lastSeen(user.getLastSeen())
+				.isOnline(user.isUserOnline())
+				.build();
+	}
 }
