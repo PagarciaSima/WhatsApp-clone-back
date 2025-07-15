@@ -10,6 +10,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.pgs.whatsappclone.chat.Chat;
 import com.pgs.whatsappclone.chat.ChatRepository;
 import com.pgs.whatsappclone.file.FileService;
+import com.pgs.whatsappclone.file.FileUtils;
+import com.pgs.whatsappclone.notification.Notification;
+import com.pgs.whatsappclone.notification.NotificationService;
+import com.pgs.whatsappclone.notification.NotificationType;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +28,7 @@ public class MessageService {
 	private final ChatRepository chatRepository;
 	private final MessageMapper mapper;
 	private final FileService fileService;
+	private final NotificationService notificationService;
 
 	/**
 	 * Saves a new message in the database associated with a chat.
@@ -54,6 +59,22 @@ public class MessageService {
 		message.setState(MessageState.SENT);
 
 		this.messageRepository.save(message);
+		
+		// Build notification
+		Notification notification = Notification.builder()
+				.chatId(chat.getId())
+				.messageType(messageRequest.getType())
+				.content(messageRequest.getContent())
+				.senderId(messageRequest.getSenderId())
+				.receiverId(messageRequest.getReceiverId())
+				.type(NotificationType.MESSAGE)
+				.chatName(chat.getChatName(message.getSenderId()))
+				.build();
+
+		log.info("Built notification to be sent to user {}: {}", message.getReceiverId(), notification);
+
+		// Send notification
+		this.notificationService.sendNotification(message.getReceiverId(), notification);
 
 		log.info("Message saved successfully with sender ID {} and receiver ID {}", messageRequest.getSenderId(),
 				messageRequest.getReceiverId());
@@ -107,7 +128,18 @@ public class MessageService {
 
 	    log.info("Messages set to SEEN for chat ID: {} and recipient ID: {}", chatId, recipientId);
 
-	    // TODO notification
+	    // Build notification
+		Notification notification = Notification.builder()
+				.chatId(chat.getId())
+				.type(NotificationType.MESSAGE)
+				.receiverId(getSenderId(chat, authentication))
+				.senderId(recipientId)
+				.build();
+
+		log.info("Built notification to be sent to user {}: {}", recipientId, notification);
+
+		// Send notification
+		this.notificationService.sendNotification(recipientId, notification);
 	}
 	
 	/**
@@ -148,8 +180,21 @@ public class MessageService {
 
 	    this.messageRepository.save(message);
 	    log.info("Media message saved successfully for chat ID: {} from sender ID: {} to recipient ID: {}", chatId, senderId, recipientId);
+	    
+	    // Build notification
+		Notification notification = Notification.builder()
+				.chatId(chat.getId())
+				.type(NotificationType.IMAGE)
+				.messageType(MessageType.IMAGE)
+				.senderId(senderId)
+				.receiverId(recipientId)
+				.media(FileUtils.readFileFromLocation(filePath))
+				.build();
 
-	    // TODO notification
+		log.info("Built notification to be sent to user {}: {}", recipientId, notification);
+
+		// Send notification
+		this.notificationService.sendNotification(recipientId, notification);
 	}
 	
 	/**
