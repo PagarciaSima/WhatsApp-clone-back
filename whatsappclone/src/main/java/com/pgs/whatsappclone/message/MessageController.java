@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/v1/messages")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Message")
 public class MessageController {
 
 	private final MessageService messageService;
@@ -53,7 +56,7 @@ public class MessageController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public void uploadMedia(
 	    @RequestParam("chat-id") String chatId,
-	    // TODO add param from swagger
+	    @Parameter() // Swagger param for input file
 	    @RequestParam("file") MultipartFile file,
 	    Authentication authentication
 	) {
