@@ -86,9 +86,7 @@ export class KeycloakService {
    * Note: Currently calling `login()`, but it should be `logout()` instead.
    */
   logout() {
-    this.keyCloak.login({ redirectUri: 'http://localhost:4200' });
-    // Correct version:
-    // this.keyCloak.logout({ redirectUri: 'http://localhost:4200' });
+    return this.keyCloak.logout({redirectUri: 'http://localhost:4200'});
   }
 
   /**
