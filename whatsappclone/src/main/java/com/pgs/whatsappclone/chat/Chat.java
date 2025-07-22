@@ -132,6 +132,16 @@ public class Chat extends BaseAuditingEntity{
 	}
 	
 	@Transient
+	/**
+	 * Returns the creation time of the last message in the chat.
+	 * <p>
+	 * Messages are expected to be ordered by creation date in descending order,
+	 * so the most recent message is at index 0.
+	 * </p>
+	 * If there are no messages, returns {@code null}.
+	 *
+	 * @return the {@link LocalDateTime} of the most recent message, or {@code null} if no messages exist
+	 */
 	public LocalDateTime getLastMessageTime() {
 		if(messages != null && !messages.isEmpty()) {
 			return messages.get(0).getCreatedDate();
