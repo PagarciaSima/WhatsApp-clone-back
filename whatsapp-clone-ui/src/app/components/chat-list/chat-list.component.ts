@@ -1,7 +1,8 @@
 import { Component, EventEmitter, input, InputSignal, output, OutputEmitterRef } from '@angular/core';
 import { ChatResponse, UserResponse } from '../../services/models';
 import { DatePipe } from '@angular/common';
-import { UserService } from '../../services/services';
+import { ChatService, UserService } from '../../services/services';
+import { KeycloakService } from '../../utils/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-chat-list',
@@ -17,7 +18,9 @@ export class ChatListComponent {
   chatSelected: OutputEmitterRef<ChatResponse> = output<ChatResponse>();
 
   constructor(
-    private userService: UserService
+    private userService: UserService,
+    private chatService: ChatService,
+    private keyCloakService: KeycloakService
   ) {
    
   }
@@ -43,6 +46,25 @@ export class ChatListComponent {
     return lastMessage?.substring(0, 17) + '...';
   }
 
-  selectContact(_t34: UserResponse) {
+  selectContact(contact: UserResponse) {
+    this.chatService.createChat({
+      'sender-id': this.keyCloakService.userId as string,
+      'receiver-id': contact.id as string
+    }).subscribe({
+      next: (res) => {
+        const chat: ChatResponse = {
+          id: res.response,
+          name: contact.firstName + ' ' + contact.lastName,
+          recipientOnline: contact.online,
+          lastMessageTime: contact.lastSeen,
+          senderId: this.keyCloakService.userId,
+          receiverId: contact.id
+        };
+        this.chats().unshift(chat);
+        this.searchNewContact = false;
+        // Send new chat to the parent
+        this.chatSelected.emit(chat);
+      }
+    })
   }
 }
