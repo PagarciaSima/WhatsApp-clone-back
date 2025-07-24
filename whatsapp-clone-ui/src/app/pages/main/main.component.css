@@ -52,79 +52,69 @@
 .bg-chat {
   background-color: #efeae2;
   background-image: url("/wa_bg.png");
-  background-size: contain
+  background-size: contain;
 }
-
-
 
 .message-box {
   position: relative;
   display: flex;
   width: 100%;
   margin: 5px 0;
-
-  &.self {
-    > div {
-      position: relative;
-      right: 0;
-      text-align: right;
-      background: #d9fdd3;
-      max-width: 65%;
-      padding: 10px 10px 0 10px;
-      border-radius: 5px;
-      font-size: 0.9em;
-    }
-
-    justify-content: flex-end;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: -10px;
-      width: 20px;
-      height: 20px;
-      background: linear-gradient(135deg, #d9fdd3 0%, #d9fdd3 50%, transparent 50%, transparent);
-    }
-  }
-
-  &.friend {
-    justify-content: flex-start;
-
-    > div {
-      position: relative;
-      right: 0;
-      text-align: left;
-      background: #fff;
-      max-width: 65%;
-      padding: 10px 10px 0 10px;
-      border-radius: 5px;
-      font-size: 0.9em;
-    }
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -10px;
-      width: 20px;
-      height: 20px;
-      background: linear-gradient(225deg, #fff 0%, #fff 50%, transparent 50%, transparent);
-    }
-  }
+}
+.message-box.self {
+  justify-content: flex-end;
+}
+.message-box.self > div {
+  position: relative;
+  right: 0;
+  text-align: right;
+  background: #d9fdd3;
+  max-width: 65%;
+  padding: 10px 10px 0 10px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+.message-box.self::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #d9fdd3 0%, #d9fdd3 50%, transparent 50%, transparent);
+}
+.message-box.friend {
+  justify-content: flex-start;
+}
+.message-box.friend > div {
+  position: relative;
+  right: 0;
+  text-align: left;
+  background: #fff;
+  max-width: 65%;
+  padding: 10px 10px 0 10px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+.message-box.friend::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -10px;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(225deg, #fff 0%, #fff 50%, transparent 50%, transparent);
 }
 
-i {
-  &.seen {
-    color: #53bdeb;
-  }
-  &.ml-neg {
-    margin-left: -7px;
-  }
+i.seen {
+  color: #53bdeb;
+}
+i.ml-neg {
+  margin-left: -7px;
 }
 
 .emojis-panel {
   position: absolute;
   left: 350px;
   bottom: 50px;
-}
+}/*# sourceMappingURL=main.component.css.map */

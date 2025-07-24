@@ -1,11 +1,8 @@
-.chat-list {
-  > div {
-    cursor: pointer;
-
-    &:hover {
-      background-color: #f2f1f1;
-    }
-  }
+.chat-list > div {
+  cursor: pointer;
+}
+.chat-list > div:hover {
+  background-color: #f2f1f1;
 }
 
 .badge.rounded-pill.text-bg-light {
@@ -14,11 +11,10 @@
 
 .msg-date {
   font-size: 0.7rem;
-
-  &.unread {
-    color: #1fa855;
-    font-weight: 500;
-  }
+}
+.msg-date.unread {
+  color: #1fa855;
+  font-weight: 500;
 }
 
 .unread-msg-badge {
@@ -36,4 +32,4 @@
 
 .border-bottom-gray {
   border-bottom: solid 1px #ccc;
-}
+}/*# sourceMappingURL=chat-list.component.css.map */
