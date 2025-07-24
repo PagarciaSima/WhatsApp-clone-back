@@ -68,7 +68,7 @@ public class MessageService {
 				.senderId(messageRequest.getSenderId())
 				.receiverId(messageRequest.getReceiverId())
 				.type(NotificationType.MESSAGE)
-				.chatName(chat.getChatName(message.getSenderId()))
+				.chatName(chat.getTargetChatName(message.getSenderId()))
 				.build();
 
 		log.info("Built notification to be sent to user {}: {}", message.getReceiverId(), notification);

@@ -85,6 +85,25 @@ public class Chat extends BaseAuditingEntity{
 		return recipient.getFirstName() +  " " + recipient.getLastName();
 	}
 	
+	/**
+	 * Returns the full name of the user that corresponds to the current user ID.
+	 * <p>
+	 * If the current user is the sender, their own name is returned.
+	 * Otherwise, the recipient's name is returned.
+	 * 
+	 * @param currentUserId the ID of the currently logged-in user
+	 * @return the full name of the user identified by the currentUserId, 
+	 *         either sender or recipient
+	 */
+	public String getTargetChatName(final String currentUserId) {
+	    // If the current user is the sender, return their own full name
+	    if (sender.getId().equals(currentUserId)) {
+	        return sender.getFirstName() + " " + sender.getLastName();
+	    }
+	    // Otherwise, return the recipient's full name
+	    return recipient.getFirstName() + " " + recipient.getLastName();
+	}
+	
 	@Transient
 	/**
 	 * Calculates the number of unread messages for the specified user.
