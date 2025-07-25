@@ -56,7 +56,7 @@
                         {{ message.createdAt | date:'HH:mm' }}&nbsp;
                         @if (message.state === 'SENT') {
                           <span>
-                          <i class="fas fa-check seen"></i>
+                          <i class="fas fa-check seen text-secondary"></i>
                         </span>
                         } @else {
                           <span>
@@ -90,7 +90,7 @@
                   type="file"
                   [hidden]="true"
                   accept=".jpg, .jpeg,.png,.svg,.mp4,.mov,.mp3"
-                  
+                  (change)="uploadMedia($event.target)"
                 >
                 <i class="fa-regular fa-face-smile cursor-pointer" (click)="showEmojis = !showEmojis"></i>
                 @if (showEmojis) {

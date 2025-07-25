@@ -1,38 +1,50 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { PickerComponent } from "@ctrl/ngx-emoji-mart";
-import { ChatListComponent } from "../../components/chat-list/chat-list.component";
-import { ChatResponse, MessageRequest, MessageResponse } from '../../services/models';
-import { ChatService, MessageService } from '../../services/services';
-import { KeycloakService } from '../../utils/keycloak/keycloak.service';
-import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { EmojiData } from '@ctrl/ngx-emoji-mart/ngx-emoji';
-import SockJS from 'sockjs-client';
+import {AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {ChatListComponent} from '../../components/chat-list/chat-list.component';
+import {KeycloakService} from '../../utils/keycloak/keycloak.service';
+import {ChatResponse} from '../../services/models/chat-response';
+import {DatePipe} from '@angular/common';
+import {MessageService} from '../../services/services/message.service';
+import {MessageResponse} from '../../services/models/message-response';
 import * as Stomp from 'stompjs';
+import SockJS from 'sockjs-client';
+import {FormsModule} from '@angular/forms';
+import {MessageRequest} from '../../services/models/message-request';
+import {ChatService} from '../../services/services/chat.service';
+import {PickerComponent} from '@ctrl/ngx-emoji-mart';
+import {EmojiData} from '@ctrl/ngx-emoji-mart/ngx-emoji';
 import { Notification } from './notification';
 
 @Component({
   selector: 'app-main',
-  imports: [ChatListComponent, DatePipe, PickerComponent, FormsModule],
+  imports: [
+    ChatListComponent,
+    DatePipe,
+    FormsModule,
+    PickerComponent
+  ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'
 })
-export class MainComponent implements OnInit, OnDestroy {
-  
-  chats: Array<ChatResponse> = [];
+export class MainComponent implements OnInit, OnDestroy, AfterViewChecked {
+
   selectedChat: ChatResponse = {};
-  chatMessages: MessageResponse[] = [];
-  showEmojis:boolean = false;
-  messageContent: string = '';
+  chats: Array<ChatResponse> = [];
+  chatMessages: Array<MessageResponse> = [];
   socketClient: any = null;
-  notificationSubscription: any;
-  
+  messageContent: string = '';
+  showEmojis = false;
+  @ViewChild('scrollableDiv') scrollableDiv!: ElementRef<HTMLDivElement>;
+  private notificationSubscription: any;
+
   constructor(
     private chatService: ChatService,
+    private messageService: MessageService,
     private keycloakService: KeycloakService,
-    private messageService: MessageService
   ) {
-    
+  }
+
+  ngAfterViewChecked(): void {
+    this.scrollToBottom();
   }
 
   ngOnDestroy(): void {
@@ -42,26 +54,10 @@ export class MainComponent implements OnInit, OnDestroy {
       this.socketClient = null;
     }
   }
-  
+
   ngOnInit(): void {
-    this.getAllChats();
     this.initWebSocket();
-  }
-  
-  private getAllChats() {
-    this.chatService.getChatsByReceiver().subscribe({
-      next: (res) => {
-        this.chats = res;
-      }
-    });
-  }
-  
-  logout() {
-    this.keycloakService.logout();
-  }
-  
-  userProfile() {
-    this.keycloakService.accountManagement();
+    this.getAllChats();
   }
 
   chatSelected(chatResponse: ChatResponse) {
@@ -71,46 +67,8 @@ export class MainComponent implements OnInit, OnDestroy {
     this.selectedChat.unreadCount = 0;
   }
 
-  setMessagesToSeen() {
-    this.messageService.setMessagesToSeen({
-      'chat-id': this.selectedChat.id as string
-    }).subscribe({
-      next: () => {
-
-      }
-    });
-  }
-
-  getAllChatMessages(chatId: string) {
-    this.messageService.getMessages({
-      'chat-id': chatId
-    }).subscribe({
-      next: (messages) => {
-        this.chatMessages = messages;
-      }
-    });
-  }
-
-  isSelfMessage(message: MessageResponse) {
+  isSelfMessage(message: MessageResponse): boolean {
     return message.senderId === this.keycloakService.userId;
-  }
-
-  uploadMediaFile(target: EventTarget|null) {
-  }
-
-  onSelectEmojis(emojiSelected: any) {
-    const emoji: EmojiData = emojiSelected.emoji;
-    this.messageContent += emoji.native;
-  }
-
-  keyDown(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
-      this.sendMessage();
-    }
-  }
-
-  onClick() {
-    this.setMessagesToSeen();
   }
 
   sendMessage() {
@@ -120,7 +78,7 @@ export class MainComponent implements OnInit, OnDestroy {
         senderId: this.getSenderId(),
         receiverId: this.getReceiverId(),
         content: this.messageContent,
-        type: 'TEXT'
+        type: 'TEXT',
       };
       this.messageService.saveMessage({
         body: messageRequest
@@ -136,51 +94,120 @@ export class MainComponent implements OnInit, OnDestroy {
           };
           this.selectedChat.lastMessage = this.messageContent;
           this.chatMessages.push(message);
-          // Reset content and emoji
           this.messageContent = '';
           this.showEmojis = false;
         }
-      });      
+      });
     }
   }
 
-  getSenderId(): string {
-    if (this.selectedChat.senderId === this.keycloakService.userId) {
-      return this.selectedChat.senderId as string;
+  keyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      this.sendMessage();
     }
-    return this.selectedChat.receiverId as string;
   }
 
-  getReceiverId(): string {
-    if (this.selectedChat.senderId === this.keycloakService.userId) {
-      return this.selectedChat.receiverId as string;
-    }
-    return this.selectedChat.senderId as string;
+  onSelectEmojis(emojiSelected: any) {
+    const emoji: EmojiData = emojiSelected.emoji;
+    this.messageContent += emoji.native;
   }
 
-  initWebSocket() {
+  onClick() {
+    this.setMessagesToSeen();
+  }
+
+  uploadMedia(target: EventTarget | null) {
+    const file = this.extractFileFromTarget(target);
+    if (file !== null) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+
+          const mediaLines = reader.result.toString().split(',')[1];
+
+          this.messageService.uploadMedia({
+            'chat-id': this.selectedChat.id as string,
+            body: {
+              file: file
+            }
+          }).subscribe({
+            next: () => {
+              const message: MessageResponse = {
+                senderId: this.getSenderId(),
+                receiverId: this.getReceiverId(),
+                content: 'Attachment',
+                type: 'IMAGE',
+                state: 'SENT',
+                media: [mediaLines],
+                createdAt: new Date().toString()
+              };
+              this.chatMessages.push(message);
+            }
+          });
+        }
+      }
+      reader.readAsDataURL(file);
+    }
+  }
+
+  logout() {
+    this.keycloakService.logout();
+  }
+
+  userProfile() {
+    this.keycloakService.accountManagement();
+  }
+
+  private setMessagesToSeen() {
+    this.messageService.setMessagesToSeen({
+      'chat-id': this.selectedChat.id as string
+    }).subscribe({
+      next: () => {
+      }
+    });
+  }
+
+  private getAllChats() {
+    this.chatService.getChatsByReceiver()
+      .subscribe({
+        next: (res) => {
+          this.chats = res;
+        }
+      });
+  }
+
+  private getAllChatMessages(chatId: string) {
+    this.messageService.getMessages({
+      'chat-id': chatId
+    }).subscribe({
+      next: (messages) => {
+        this.chatMessages = messages;
+      }
+    });
+  }
+
+  private initWebSocket() {
     if (this.keycloakService.keyCloak.tokenParsed?.sub) {
-      let ws = new SockJS('http://localhost:8080/ws')
+      let ws = new SockJS('http://localhost:8080/ws');
       this.socketClient = Stomp.over(ws);
       const subUrl = `/user/${this.keycloakService.keyCloak.tokenParsed?.sub}/chat`;
-      this.socketClient.connect({ 'Authorization': 'Bearer' + this.keycloakService.keyCloak.token },
+      this.socketClient.connect({'Authorization': 'Bearer ' + this.keycloakService.keyCloak.token},
         () => {
-          this.notificationSubscription = this.socketClient.subscribe(subUrl, 
+          this.notificationSubscription = this.socketClient.subscribe(subUrl,
             (message: any) => {
               const notification: Notification = JSON.parse(message.body);
-              this.handleNotificaion(notification);
-            },
-            () => console.error('Error while connecting to websocket')
+              this.handleNotification(notification);
 
-          )
+            },
+            () => console.error('Error while connecting to webSocket')
+            );
         }
-      )
+      );
     }
   }
-  
-  handleNotificaion(notification: Notification) {
+
+  private handleNotification(notification: Notification) {
     if (!notification) return;
-    // Open chat
     if (this.selectedChat && this.selectedChat.id === notification.chatId) {
       switch (notification.type) {
         case 'MESSAGE':
@@ -204,27 +231,17 @@ export class MainComponent implements OnInit, OnDestroy {
           this.chatMessages.forEach(m => m.state = 'SEEN');
           break;
       }
-    }
-    // closed chat (notification from other chat)
-    else {
-      // Find the chat that this notification belongs to in the list of chats (even if it's not currently open)
-      const destChat: ChatResponse | undefined = this.chats.find(c => c.id === notification.chatId);
-
-      // If that chat exists and the notification type is NOT 'SEEN'
+    } else {
+      const destChat = this.chats.find(c => c.id === notification.chatId);
       if (destChat && notification.type !== 'SEEN') {
-        // If the notification is a text message
         if (notification.type === 'MESSAGE') {
-          destChat.lastMessage = notification.content; // Update the last message preview for that chat
-        }
-        // If the notification is an image
-        else if (notification.type === 'IMAGE') {
-          destChat.lastMessage = 'Attachment'; // Set last message preview as "Attachment"
+          destChat.lastMessage = notification.content;
+        } else if (notification.type === 'IMAGE') {
+          destChat.lastMessage = 'Attachment';
         }
         destChat.lastMessageTime = new Date().toString();
         destChat.unreadCount! += 1;
-      }
-      // No destination chat (create a new one)
-      else if (notification.type === 'MESSAGE') {
+      } else if (notification.type === 'MESSAGE') {
         const newChat: ChatResponse = {
           id: notification.chatId,
           senderId: notification.senderId,
@@ -233,11 +250,38 @@ export class MainComponent implements OnInit, OnDestroy {
           name: notification.chatName,
           unreadCount: 1,
           lastMessageTime: new Date().toString()
-        }
+        };
         this.chats.unshift(newChat);
       }
     }
   }
+
+  private getSenderId(): string {
+    if (this.selectedChat.senderId === this.keycloakService.userId) {
+      return this.selectedChat.senderId as string;
+    }
+    return this.selectedChat.receiverId as string;
+  }
+
+  private getReceiverId(): string {
+    if (this.selectedChat.senderId === this.keycloakService.userId) {
+      return this.selectedChat.receiverId as string;
+    }
+    return this.selectedChat.senderId as string;
+  }
+
+  private scrollToBottom() {
+    if (this.scrollableDiv) {
+      const div = this.scrollableDiv.nativeElement;
+      div.scrollTop = div.scrollHeight;
+    }
+  }
+
+  private extractFileFromTarget(target: EventTarget | null): File | null {
+    const htmlInputTarget = target as HTMLInputElement;
+    if (target === null || htmlInputTarget.files === null) {
+      return null;
+    }
+    return htmlInputTarget.files[0];
+  }
 }
-
-
